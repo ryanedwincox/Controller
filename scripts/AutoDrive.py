@@ -92,30 +92,43 @@ def normalize_0_1(value):
     return (ctrl, ctrl_tare)
 
 def update_controller(controller):
-    # listener.waitForTransform('/desired_position', '/camera', rospy.Time(), rospy.Duration(4.0))
-    # try:
-    now = rospy.Time.now()
-    # listener.waitForTransform('/desired_position', '/camera', now, rospy.Duration(4.0))
-    (trans,rot) = listener.lookupTransform('/desired_position', '/camera', rospy.Time(0))
-    # (trans2,temp) = listener.lookupTransform('/camera', 'marker_origin', rospy.Time(0))
+    # # check if a valid tf is being published and if not turn off motors
+    # if (listener.frameExists('/camera')):
+    #     print "camera tf being published"
+    #     # control.trans_x, control.trans_y, control.rise = 0,0,0
+    #     # x,y,z,yaw = 0,0,0,0
+    # else:
+    #     print "no camera tf being published"
+
+    try:
+        (trans,rot) = listener.lookupTransform('/desired_position', '/camera', rospy.Time(0))
+        # (trans2,temp) = listener.lookupTransform('/camera', 'marker_origin', rospy.Time(0))
     
-    # except (tf.TransformException):
-    #     print "tf exception"
-    #     control.trans_x, control.trans_y, control.rise = 0,0,0
-    # except (tf.LookupException, tf.ConnectivityException):
-    #     print "lookup Exception"
-    #     control.trans_x, control.trans_y, control.rise = 0,0,0
+    except (tf.LookupException, tf.ConnectivityException):
+        print "lookup Exception"
+        control.trans_x, control.trans_y, control.rise = 0,0,0
 
     # measuredYaw = math.atan2(trans2[0], trans2[2])
     angles = euler_from_quaternion(rot) # in radians
     print "angles",str(angles)
     x,y,z,yaw = controller.update(trans,angles[1])
+    # if (gui.resetMotorCommands):
+    #     x,y,z,yaw = 0,0,0,0
+    #     gui.RESETMOTORCMDS = False
     #print 'yaw command: ',yaw
     # these values need to be between 0 and 1
     #PID_CONSTANT = 10 # temporary value
-    #control.trans_x = x / PID_CONSTANT
+    #control.trans_x = x / PID_CONSTANT 
     #control.trans_y = z / PID_CONSTANT
     #control.rise = y / PID_CONSTANT
+
+    # # check if a valid tf is being published and if not turn off motors
+    # if (listener.frameExists('/camera')):
+    #     print "camera tf being published"
+    #     # control.trans_x, control.trans_y, control.rise = 0,0,0
+    #     # x,y,z,yaw = 0,0,0,0
+    # else:
+    #     print "no camera tf being published"
 
     control.rise,control.rise_tare = normalize_0_1(y)
     control.trans_x,control.trans_x_tare = normalize_0_1(x)
@@ -124,6 +137,7 @@ def update_controller(controller):
 
     #print "control: ",control
     #print "trans: ",trans
+
 
     
 
@@ -162,9 +176,9 @@ if __name__=="__main__":
 
     # Start gui and call mainDrive loop
     gui = OrcusGUI()
-    gui.master.geometry("812x800") # make sure all widgets start inside
-    gui.master.minsize(812, 800)
-    gui.master.maxsize(812, 800)
+    gui.master.geometry("800x550") # make sure all widgets start inside
+    gui.master.minsize(800, 550)
+    gui.master.maxsize(800, 550)
     gui.master.title('ROV ORCUS')
 
     joystick = joy_init()

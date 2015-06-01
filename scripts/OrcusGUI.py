@@ -7,13 +7,13 @@ from MOTOR import MOTOR
 
 
 # Motor line coordinate constants
-FRONT_Y = 40
-BACK_Y = 205
-LEFT_X = 40
-RIGHT_X = 130
+FRONT_Y = 80
+BACK_Y = 225
+LEFT_X = 60
+RIGHT_X = 150
 FRONT_VERT_X = 53
 BACK_VERT_X = 195
-VERT_Y = 65;
+VERT_Y = 85;
 
 # Slider start position
 START_POSITION = 0
@@ -32,6 +32,7 @@ class OrcusGUI(tk.Frame):
 		# Initialize ESTOP
 		self.ESTOP = False # starts with system running?  True means stop
 		self.NAVIGATE  = False
+		self.RESETMOTORCMDS = False
 		# Initialize sensor values
 		self.ROVconnect = "disconnected"
 		self.controllerConnect = "disconnected"
@@ -39,17 +40,17 @@ class OrcusGUI(tk.Frame):
 		self.masterCurrentValue = 0
 		
 		# Displays banner, choose image or text
-		# self.imageBanner()
-		self.textBanner()		
+		self.imageBanner()
+		# self.textBanner()		
 
 		# Creates eStop button
-		self.estopButton()
+		# self.estopButton()
 
 		# Creates navigate button
 		self.navigateButton()
 		
 		# Displays sensor readings
-		self.sensorReadings()
+		# self.sensorReadings()
 		
 		# Draws ROV top view with translational motor arrows
 		self.drawRovTopView()
@@ -58,21 +59,19 @@ class OrcusGUI(tk.Frame):
 		self.drawRovSideView()
 		
 		# Reads sliders and updates motor values
-		self.getSliderInput()
+		# self.getSliderInput()
 		
 		self.grid()	
 	
 	# Draws banner from image
-	"""
 	def imageBanner(self):
 		self.banner = tk.Canvas(self, width=812, height=111)
 		self.bannerImage = tk.PhotoImage(file='./UWROV_Banner.gif')
 		self.b = self.banner.create_image(1,1,image=self.bannerImage, anchor='nw')
 		self.banner.grid(row=0, column=0, columnspan=2)
-	"""	
+	
 
 	# Draws banner from text
-	""
 	def textBanner(self):
 		self.bannerFont = tkFont.Font(family='Calibri', size=20, weight='bold')
 		self.banner = tk.Label(self, text='University of Washington Underwater Robotics Club\nUWROV', font = self.bannerFont, background='#883199')
@@ -120,24 +119,24 @@ class OrcusGUI(tk.Frame):
 	
 	# Draws ROV top view with motor speed vector overlay
 	def drawRovTopView(self):
-		self.rovTop = tk.Canvas(self, height=235, width=169)
-		#self.rovTopView = tk.PhotoImage(file='./orcusTop.gif')
-		#self.rov = self.rovTop.create_rectangle(20,20,180,255, fill='#4c0099')
-		#self.rov = self.rovTop.create_image(1,1,image=self.rovTopView, anchor='nw')
+		self.rovTop = tk.Canvas(self, height=300, width=250)
+		self.rovTopView = tk.PhotoImage(file='./orcusTop.gif')
+		# self.rov = self.rovTop.create_rectangle(40,40,180,255, fill='#4c0099')
+		self.rov = self.rovTop.create_image(20,40,image=self.rovTopView, anchor='nw')
 		self.frontLeftLine = self.rovTop.create_line(0,0,0,0)
 		self.frontRightLine = self.rovTop.create_line(0,0,0,0)
 		self.backLeftLine = self.rovTop.create_line(0,0,0,0)
 		self.backRightLine = self.rovTop.create_line(0,0,0,0)
-		self.rovTop.grid(row = 1, column = 0, padx = 30, pady = 30)
+		self.rovTop.grid(row = 1, column = 0, padx = 0, pady = 0)
 	
 	# draws ROV side view with motor speed vector overlay
 	def drawRovSideView(self):
-		self.rovSide = tk.Canvas(self, height=148, width=235)
-		#self.rovSideView = tk.PhotoImage(file='./orcusSide.gif')
-		#self.rov = self.rovSide.create_image(1,1,image=self.rovSideView, anchor='nw')
+		self.rovSide = tk.Canvas(self, height=200, width=235)
+		self.rovSideView = tk.PhotoImage(file='./orcusSide.gif')
+		self.rov = self.rovSide.create_image(1,20,image=self.rovSideView, anchor='nw')
 		self.frontVertLine = self.rovTop.create_line(0,0,0,0)
 		self.backVertLine = self.rovTop.create_line(0,0,0,0)
-		self.rovSide.grid(row = 1, column = 1, padx = 30, pady = 30)
+		self.rovSide.grid(row = 1, column = 1, padx = 0, pady = 0)
 	
 	# prints motor values from sliders
 	# Not used ****
@@ -177,11 +176,15 @@ class OrcusGUI(tk.Frame):
 		self.estop = tk.Button(self, text='ESTOP', command=self.estopCallback, background='red', width=7, padx=20, pady=20)
 		self.estop.grid(row=3, column=1)
 
+	def resetMotorCommands(self):
+		return self.RESETMOTORCMDS
+
 	def navigateStatus(self):
 		return self.NAVIGATE
 
 	def navigateCallback(self):
 		self.NAVIGATE = not self.NAVIGATE
+		self.RESETMOTORCMDS = True
 		if (self.NAVIGATE):
 			self.navigate.configure(background='yellow', text='Stop Navigating')
 		else:
