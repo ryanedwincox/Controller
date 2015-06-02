@@ -38,20 +38,22 @@ class Controller():
         self.desired = trans
         self.desiredYaw = yaw
 
+    def setDesiredYaw(self, yaw):
+        self.desiredYaw = yaw
+
     def update(self, trans, yaw):
         x,y,z = trans
         # print 'measured yaw is: ',yaw
-        transN = ( math.sqrt(x**2 + z**2), y, math.atan2(x, z) )
+        # transN = ( math.sqrt(x**2 + z**2), y, math.atan2(x, z) )
 
         error = [desired_i - trans_i for desired_i, trans_i in zip(self.desired, trans)] #transN for r,y,gamma
-        errorYaw = self.desiredYaw - yaw
+        error.append(self.desiredYaw - yaw)
 
         # these are in r y gamma format and we need to go back to x y z
-        r,y,gamma = [ self.pid[i].update(error[i]) for i in range(3) ]
-        yawCommand = self.pid[3].update(errorYaw)
+        x,y,z,yaw = [ self.pid[i].update(error[i]) for i in range(4) ]
 
         # return [ r * math.cos(gamma), y, r * math.sin(gamma) ]
-        return [r,y,gamma,yawCommand]
+        return [x,y,z,yaw]
 
     def setPidParameters(self, parameters):
         [ self.pid[i].setParameters(parameters[i*3:(i+1)*3]) for i in range(4) ]

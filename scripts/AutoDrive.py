@@ -120,12 +120,19 @@ def update_controller(controller):
         print "position known"
         try:
             (trans,rot) = listener.lookupTransform('/desired_position', '/camera', rospy.Time(0))
-            (trans2,temp) = listener.lookupTransform('/camera', 'marker_origin', rospy.Time(0))
+            (trans2,temp) = listener.lookupTransform('/marker_origin', '/camera', rospy.Time(0))
 
-            # measuredYaw = math.atan2(trans2[0], trans2[2])
-            angles = euler_from_quaternion(rot) # in radians
-            # print "angles",str(angles)
-            x,y,z,yaw = controller.update(trans,angles[1])
+            # calculate angle from the ROV to the dock
+            angleToDock = math.atan2(trans2[0], trans2[2])
+
+            # change the desired yaw so that the camera will try to face the dock
+            controller.setDesiredYaw(angleToDock)
+
+            # angles from the rot matrix
+            rotAngles = euler_from_quaternion(rot) # in radians
+
+            # update the controller by sending the error
+            x,y,z,yaw = controller.update(trans,rotAngles[1])
 
             # print "x,y,z,yaw: ", str(x), ", ", str(y) , ", ", str(z) , ", ",str(yaw) 
 

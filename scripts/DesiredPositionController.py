@@ -6,7 +6,7 @@ from sensor_msgs.msg import Joy
 
 br = None
 desired_trans = (0,0,0)
-desired_rot = (0,0,0,0)
+desired_rot = tf.transformations.quaternion_from_euler(0,0,0)
 
 def callback(data):
     global br
@@ -19,10 +19,7 @@ def callback(data):
 
     desired_trans = map(sum, zip(trans, desired_trans))
 
-    rot = tf.transformations.quaternion_from_euler( 
-            0,    # rotation x axis
-            -20*data.axes[0],    # rotation y axis
-            0 )   # rotation z axis 
+    rot = tf.transformations.quaternion_about_axis((-720)*data.axes[0], [0,1,0])
 
     desired_rot = map(sum, zip(rot, desired_rot))
 
