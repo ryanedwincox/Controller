@@ -49,18 +49,18 @@ def update_joy_values(joystick, control):
     #rospy.loginfo(output_str)
 
 def process_joy_events():
-    for event in pygame.event.get():
-        if event.type == pygame.JOYBUTTONDOWN and event.__dict__["button"] == 1:
-            control.tare();
-            print "joystick tare"
-        if event.type == pygame.JOYBUTTONDOWN and event.__dict__["button"] == 0:
-            if control.rise_control > -1:
-                control.rise_control -= .05;
-                print "increase rise tare"
-        if event.type == pygame.JOYBUTTONDOWN and event.__dict__["button"] == 3:
-            if control.rise_control < 1:
-                control.rise_control += .05;
-                print "decrease rise tare"
+    # for event in pygame.event.get():
+    #     if event.type == pygame.JOYBUTTONDOWN and event.__dict__["button"] == 1:
+    #         control.tare();
+    #         print "joystick tare"
+    #     if event.type == pygame.JOYBUTTONDOWN and event.__dict__["button"] == 0:
+    #         if control.rise_control > -1:
+    #             control.rise_control -= .05;
+    #             print "increase rise tare"
+    #     if event.type == pygame.JOYBUTTONDOWN and event.__dict__["button"] == 3:
+    #         if control.rise_control < 1:
+    #             control.rise_control += .05;
+    #             print "decrease rise tare"
 
 def joy_init():
     """Initializes pygame and the joystick, and returns the joystick to be
