@@ -8,6 +8,7 @@ from OrcusGUI import OrcusGUI
 from Controller import *
 from MotorController import *
 from tf.transformations import euler_from_quaternion
+from std_msgs.msg import Bool
 
 
 """
@@ -51,12 +52,15 @@ def process_joy_events():
     for event in pygame.event.get():
         if event.type == pygame.JOYBUTTONDOWN and event.__dict__["button"] == 1:
             control.tare();
+            print "joystick tare"
         if event.type == pygame.JOYBUTTONDOWN and event.__dict__["button"] == 0:
             if control.rise_control > -1:
                 control.rise_control -= .05;
+                print "increase rise tare"
         if event.type == pygame.JOYBUTTONDOWN and event.__dict__["button"] == 3:
             if control.rise_control < 1:
                 control.rise_control += .05;
+                print "decrease rise tare"
 
 def joy_init():
     """Initializes pygame and the joystick, and returns the joystick to be
@@ -73,73 +77,69 @@ def joy_init():
     
     return joystick
 
-def normalize_0_1(value):
-    PID_CONSTANT = 10 # temporary value
+def normalize_neg1_to_1(value):
+    PID_CONSTANT = 10 # not sure where this value comes from
     value = value/PID_CONSTANT
 
+    # limit the value to between -1 and 1
     if value < -1:
-        ctrl = 0
-        ctrl_tare = 1
-    elif -1 <= value < 0:
-        ctrl = 0
-        ctrl_tare = -value
-    elif 0 <= value < 1:
-        ctrl = value
-        ctrl_tare = 0
-    else: # value > 1
-        ctrl = 1
-        ctrl_tare = 0
-    return (ctrl, ctrl_tare)
+        value = -1
+    elif value > 1:
+        value = 1
+
+    return value
+
+def positionStatusCallback(data):
+    global position_known
+    position_known = data.data
 
 def update_controller(controller):
-    # # check if a valid tf is being published and if not turn off motors
-    # if (listener.frameExists('/camera')):
-    #     print "camera tf being published"
-    #     # control.trans_x, control.trans_y, control.rise = 0,0,0
-    #     # x,y,z,yaw = 0,0,0,0
-    # else:
-    #     print "no camera tf being published"
+    if position_known:
+        print "position known"
+        try:
+            (trans,rot) = listener.lookupTransform('/desired_position', '/camera', rospy.Time(0))
+            (trans2,temp) = listener.lookupTransform('/camera', 'marker_origin', rospy.Time(0))
 
-    try:
-        (trans,rot) = listener.lookupTransform('/desired_position', '/camera', rospy.Time(0))
-        # (trans2,temp) = listener.lookupTransform('/camera', 'marker_origin', rospy.Time(0))
-    
-    except (tf.LookupException, tf.ConnectivityException):
-        print "lookup Exception"
-        control.trans_x, control.trans_y, control.rise = 0,0,0
+            # measuredYaw = math.atan2(trans2[0], trans2[2])
+            angles = euler_from_quaternion(rot) # in radians
+            # print "angles",str(angles)
+            x,y,z,yaw = controller.update(trans,angles[1])
 
-    # measuredYaw = math.atan2(trans2[0], trans2[2])
-    angles = euler_from_quaternion(rot) # in radians
-    print "angles",str(angles)
-    x,y,z,yaw = controller.update(trans,angles[1])
-    # if (gui.resetMotorCommands):
-    #     x,y,z,yaw = 0,0,0,0
-    #     gui.RESETMOTORCMDS = False
-    #print 'yaw command: ',yaw
-    # these values need to be between 0 and 1
-    #PID_CONSTANT = 10 # temporary value
-    #control.trans_x = x / PID_CONSTANT 
-    #control.trans_y = z / PID_CONSTANT
-    #control.rise = y / PID_CONSTANT
+            # print "x,y,z,yaw: ", str(x), ", ", str(y) , ", ", str(z) , ", ",str(yaw) 
 
-    # # check if a valid tf is being published and if not turn off motors
-    # if (listener.frameExists('/camera')):
-    #     print "camera tf being published"
-    #     # control.trans_x, control.trans_y, control.rise = 0,0,0
-    #     # x,y,z,yaw = 0,0,0,0
-    # else:
-    #     print "no camera tf being published"
+            control.rise = normalize_neg1_to_1(y)
+            control.trans_x = normalize_neg1_to_1(x)
+            control.trans_y = normalize_neg1_to_1(z)
+            control.yaw = normalize_neg1_to_1(yaw)
+            control.rise_tare = 0
+            control.trans_x_tare = 0
+            control.trans_y_tare = 0
+            control.yaw_tare = 0
+        
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+            print "Exception"
+            # turn off motors if there is an exception
+            control.rise = 0
+            control.trans_x = 0
+            control.trans_y = 0
+            control.yaw = 0
+            control.rise_tare = 0
+            control.trans_x_tare = 0
+            control.trans_y_tare = 0
+            control.yaw_tare = 0
 
-    control.rise,control.rise_tare = normalize_0_1(y)
-    control.trans_x,control.trans_x_tare = normalize_0_1(x)
-    control.trans_y,control.trans_y_tare = normalize_0_1(z)
-    control.yaw,control.yaw_tare = normalize_0_1(yaw)
+    else:
+        print "position unknown"
+        # turn off motors if position unknown
+        control.rise = 0
+        control.trans_x = 0
+        control.trans_y = 0
+        control.yaw = 0
+        control.rise_tare = 0
+        control.trans_x_tare = 0
+        control.trans_y_tare = 0
+        control.yaw_tare = 0
 
-    #print "control: ",control
-    #print "trans: ",trans
-
-
-    
 
 def mainDrive():
 
@@ -149,7 +149,6 @@ def mainDrive():
         pass
         update_joy_values(joystick, control)
 
- 
     update_motor_values(control)
 
     # sets the motor values to the sliders
@@ -174,11 +173,13 @@ if __name__=="__main__":
 
     rospy.init_node('autodrive')
 
+    rospy.Subscriber("position_known", Bool, positionStatusCallback)
+
     # Start gui and call mainDrive loop
     gui = OrcusGUI()
-    gui.master.geometry("800x550") # make sure all widgets start inside
-    gui.master.minsize(800, 550)
-    gui.master.maxsize(800, 550)
+    gui.master.geometry("812x550") # make sure all widgets start inside
+    gui.master.minsize(812, 550)
+    gui.master.maxsize(812, 550)
     gui.master.title('ROV ORCUS')
 
     joystick = joy_init()

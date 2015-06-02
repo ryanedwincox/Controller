@@ -40,7 +40,7 @@ class Controller():
 
     def update(self, trans, yaw):
         x,y,z = trans
-        print 'measured yaw is: ',yaw
+        # print 'measured yaw is: ',yaw
         transN = ( math.sqrt(x**2 + z**2), y, math.atan2(x, z) )
 
         error = [desired_i - trans_i for desired_i, trans_i in zip(self.desired, trans)] #transN for r,y,gamma

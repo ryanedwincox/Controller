@@ -67,7 +67,7 @@ class OrcusGUI(tk.Frame):
 	def imageBanner(self):
 		self.banner = tk.Canvas(self, width=812, height=111)
 		self.bannerImage = tk.PhotoImage(file='./UWROV_Banner.gif')
-		self.b = self.banner.create_image(1,1,image=self.bannerImage, anchor='nw')
+		self.b = self.banner.create_image(0,0,image=self.bannerImage, anchor='nw')
 		self.banner.grid(row=0, column=0, columnspan=2)
 	
 
