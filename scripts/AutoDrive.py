@@ -42,25 +42,47 @@ def onexit():
 def update_joy_values(joystick, control):
     control.trans_x = joystick.get_axis(0);
     control.trans_y = -1 * joystick.get_axis(1);
-    control.rise = -1 * joystick.get_axis(3);
+    # control.rise = -1 * joystick.get_axis(3);
     control.yaw = joystick.get_axis(2);
+    control.rise = -(joystick.get_axis(5) + 1) / 2 + (joystick.get_axis(4) + 1) / 2
+    print "LT: ", str(joystick.get_axis(5) + 1)
+    print "RT: ", str(joystick.get_axis(4) + 1)
 
     #output_str = control + ",%s", rospy.get_time()
     #rospy.loginfo(output_str)
 
-def process_joy_events():
-    # for event in pygame.event.get():
-    #     if event.type == pygame.JOYBUTTONDOWN and event.__dict__["button"] == 1:
-    #         control.tare();
-    #         print "joystick tare"
-    #     if event.type == pygame.JOYBUTTONDOWN and event.__dict__["button"] == 0:
-    #         if control.rise_control > -1:
-    #             control.rise_control -= .05;
-    #             print "increase rise tare"
-    #     if event.type == pygame.JOYBUTTONDOWN and event.__dict__["button"] == 3:
-    #         if control.rise_control < 1:
-    #             control.rise_control += .05;
-    #             print "decrease rise tare"
+def process_joy_events(joystick):
+    # define button numbers
+    A = 0
+    X = 2
+    Y = 3
+    B = 1
+    LB = 4 
+    RB = 5 
+    # get events
+    for event in pygame.event.get():
+        # process button presses
+        if event.type == pygame.JOYBUTTONDOWN:
+            if joystick.get_button(A):
+                control.tare();
+                # print "joystick tare"
+            if joystick.get_button(B):
+                # print "Button B****************************************************************************************"
+                pass
+            if joystick.get_button(X):
+                # print "Button X**** ************************************************************************************"
+                pass
+            if joystick.get_button(Y):
+                # print "Button Y****************************************************************************************"
+                pass
+            if joystick.get_button(LB):
+                if control.rise_control > -1:
+                    control.rise_control -= .05;
+                    # print "increase rise tare"
+            if joystick.get_button(RB):
+                if control.rise_control < 1:
+                    control.rise_control += .05;
+                    # print "decrease rise tare"
 
 def joy_init():
     """Initializes pygame and the joystick, and returns the joystick to be
@@ -164,7 +186,7 @@ def mainDrive():
 
     write_motor_values(gui)
 
-    process_joy_events()
+    process_joy_events(joystick)
 
     gui.after(1, mainDrive) # loops the mainDrive method
 
