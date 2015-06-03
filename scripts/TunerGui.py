@@ -26,7 +26,7 @@ class TunerGui(tk.Frame):
 
 		# create list of slider range
 		sliderFrom = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-		sliderTo = [100,100,100,100,100,100,100,100,100,1000,100,100]
+		sliderTo = [100,100,100,100,100,100,100,100,100,1000,100,1000]
 
 		# Create scroll bars for each PID constant
 		for i in range(12):

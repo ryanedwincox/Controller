@@ -6,9 +6,10 @@ from sensor_msgs.msg import Joy
 
 br = None
 desired_trans = (0,0,0)
-desired_rot = tf.transformations.quaternion_from_euler(0,0,0)
+desired_rot = (0,math.pi,math.pi)
 
 def callback(data):
+    print "callback"
     global br
     global desired_trans
     global desired_rot
@@ -19,12 +20,12 @@ def callback(data):
 
     desired_trans = map(sum, zip(trans, desired_trans))
 
-    rot = tf.transformations.quaternion_about_axis((-720)*data.axes[0], [0,1,0])
+    rot = (0, -math.pi/12*data.axes[0], 0)
 
     desired_rot = map(sum, zip(rot, desired_rot))
 
     br.sendTransform(desired_trans,
-                desired_rot,
+                tf.transformations.quaternion_from_euler(desired_rot[0],desired_rot[1],desired_rot[2]),
                 rospy.Time.now(),
                 "desired_position_controller",     # child
                 "marker_origin"                    # parent

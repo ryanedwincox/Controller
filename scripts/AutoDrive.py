@@ -34,15 +34,20 @@ control = Control()
 def onexit():
     print "exiting"
     turnOffMotors()
-    update_motor_values();
-    write_motor_values(gui);
+    update_motor_values(control)
+    write_motor_values(gui) # needs to be sent multiple times for ROV to respond
+    write_motor_values(gui)
+    write_motor_values(gui)
+    write_motor_values(gui)
+    write_motor_values(gui)
+
 
 def update_joy_values(joystick, control):
-    # control.trans_x = joystick.get_axis(0);
-    # control.trans_y = -1 * joystick.get_axis(1);
-    # # control.rise = -1 * joystick.get_axis(3);
-    # control.yaw = joystick.get_axis(2);
-    # control.rise = -(joystick.get_axis(5) + 1) / 2 + (joystick.get_axis(4) + 1) / 2
+    control.trans_x = joystick.get_axis(0);
+    control.trans_y = -1 * joystick.get_axis(1);
+    # control.rise = -1 * joystick.get_axis(3);
+    control.yaw = joystick.get_axis(2);
+    control.rise = -(joystick.get_axis(5) + 1) / 2 + (joystick.get_axis(4) + 1) / 2
     # print "LT: ", str(joystick.get_axis(5) + 1)
     # print "RT: ", str(joystick.get_axis(4) + 1)
 
@@ -90,7 +95,7 @@ def joy_init():
     pygame.joystick.init();
     if pygame.joystick.get_count() == 0:
         raise Exception("joy_init: No joysticks connected");
-    joystick = pygame.joystick.Joystick(2)
+    joystick = pygame.joystick.Joystick(0)
     joystick.init()
     
     control.tare()
@@ -118,57 +123,59 @@ def turnOffMotors():
     control.trans_x = 0
     control.trans_y = 0
     control.yaw = 0
-    control.rise_tare = 0
-    control.trans_x_tare = 0
-    control.trans_y_tare = 0
-    control.yaw_tare = 0
+    # control.rise_tare = 0
+    # control.trans_x_tare = 0
+    # control.trans_y_tare = 0
+    # control.yaw_tare = 0
 
 def update_controller(controller):
-    # if position_known:
-    #     print "position known"
-    try:
-        (trans,rot) = listener.lookupTransform('/desired_position', '/camera', rospy.Time(0))
-        (trans2,temp) = listener.lookupTransform('/marker_origin', '/camera', rospy.Time(0))
+    if position_known:
+        # print "position known"
+        try:
+            (trans,rot) = listener.lookupTransform('/desired_position', '/camera', rospy.Time(0))
+            (trans2,temp) = listener.lookupTransform('/marker_origin', '/camera', rospy.Time(0))
 
-        # calculate angle from the ROV to the dock
-        angleToDock = math.atan2(trans2[0], trans2[2])
+            # calculate angle from the ROV to the dock
+            angleToDock = (-1)*math.atan2(trans2[0], trans2[2])
+            print "angle to Dock: " , str(angleToDock)
 
-        # change the desired yaw so that the camera will try to face the dock
-        controller.setDesiredYaw(angleToDock)
+            # change the desired yaw so that the camera will try to face the dock
+            # controller.setDesiredYaw(0)
 
-        # angles from the rot matrix
-        rotAngles = euler_from_quaternion(rot) # in radians
+            # angles from the rot matrix
+            rotAngles = euler_from_quaternion(rot) # in radians
+            print "current angle: ", rotAngles[1]
 
-        # update the controller by sending the error
-        x,y,z,yaw = controller.update(trans,rotAngles[1])
+            # update the controller by sending the error
+            x,y,z,yaw = controller.update(trans,rotAngles[1] - angleToDock)
+            print "error: ", (rotAngles[1] - angleToDock)
 
-        # print "x,y,z,yaw: ", str(x), ", ", str(y) , ", ", str(z) , ", ",str(yaw)
+            # print "x,y,z,yaw: ", str(x), ", ", str(y) , ", ", str(z) , ", ",str(yaw)
 
-        control.rise = normalize_neg1_to_1(y)
-        control.trans_x = normalize_neg1_to_1(x)
-        control.trans_y = normalize_neg1_to_1(z)
-        control.yaw = normalize_neg1_to_1(yaw)
-        control.rise_tare = 0
-        control.trans_x_tare = 0
-        control.trans_y_tare = 0
-        control.yaw_tare = 0
-    
-    except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-        print "Exception"
-        # turn off motors if there is an exception
+            control.rise = -normalize_neg1_to_1(y)
+            control.trans_x = normalize_neg1_to_1(x)
+            control.trans_y = normalize_neg1_to_1(z)
+            control.yaw = normalize_neg1_to_1(yaw)
+            # control.rise_tare = 0
+            # control.trans_x_tare = 0
+            # control.trans_y_tare = 0
+            # control.yaw_tare = 0
+        
+        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+            print "Exception"
+            # turn off motors if there is an exception
+            turnOffMotors()
+
+    else:
+        # print "position unknown"
+        # turn off motors if position unknown
         turnOffMotors()
-
-    # else:
-    #     print "position unknown"
-    #     # turn off motors if position unknown
-    #     turnOffMotors()
 
 
 def mainDrive():
-    print 'mainDrive'
-    if (gui.clickedNavButton):
-        turnOffMotors()
-        gui.resetNavButton()
+    #if (gui.clickedNavButton):
+    #    turnOffMotors()
+    #    gui.resetNavButton()
 
     if (gui.navigateStatus()):
         update_controller(controller)
@@ -217,3 +224,4 @@ if __name__=="__main__":
 
     gui.after(1, mainDrive)
     gui.mainloop()
+    onexit()

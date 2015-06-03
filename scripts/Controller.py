@@ -32,11 +32,11 @@ class Controller():
         # make sure TunerGUI.py is running before running this
         rospy.Subscriber("pidConstants", String, self.callback)
 
-    def setDesired(self, trans, yaw):
+    def setDesired(self, trans):
         x,y,z = trans
         # self.desired = ( math.sqrt(x**2 + z**2), y, math.atan2(x, z) )
         self.desired = trans
-        self.desiredYaw = yaw
+        # self.desiredYaw = yaw
 
     def setDesiredYaw(self, yaw):
         self.desiredYaw = yaw
