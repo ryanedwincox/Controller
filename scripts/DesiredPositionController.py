@@ -47,8 +47,10 @@ def main():
 
     # # run the node until it is destroyed
     # rospy.spin()
-
-    rate = rospy.Rate(100)
+    
+    # once a second, send desired so lookups don't time out
+    # TODO: once per second may not be enough, adjust accordingly
+    rate = rospy.Rate(100) # 100hz
     while not rospy.is_shutdown():
         br.sendTransform(desired_trans,
                 tf.transformations.quaternion_from_euler(desired_rot[0],desired_rot[1],desired_rot[2]),
@@ -59,4 +61,7 @@ def main():
         rate.sleep()
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except rospy.ROSInterruptException:
+        pass
