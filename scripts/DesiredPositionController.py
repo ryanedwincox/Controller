@@ -33,6 +33,8 @@ def callback(data):
 
 def main():
     global br
+    global desired_trans
+    global desired_rot
 
     # starts the node
     rospy.init_node('DesiredPositionController')
@@ -43,8 +45,18 @@ def main():
     # subscribed to joystick inputs on topic "joy"
     rospy.Subscriber("joy", Joy, callback)
 
-    # run the node until it is destroyed
-    rospy.spin()
+    # # run the node until it is destroyed
+    # rospy.spin()
+
+    rate = rospy.Rate(100)
+    while not rospy.is_shutdown():
+        br.sendTransform(desired_trans,
+                tf.transformations.quaternion_from_euler(desired_rot[0],desired_rot[1],desired_rot[2]),
+                rospy.Time.now(),
+                "desired_position_controller",     # child
+                "marker_origin"                    # parent
+                )
+        rate.sleep()
 
 if __name__ == '__main__':
     main()

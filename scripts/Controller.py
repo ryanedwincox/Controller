@@ -38,8 +38,8 @@ class Controller():
         self.desired = trans
         # self.desiredYaw = yaw
 
-    def setDesiredYaw(self, yaw):
-        self.desiredYaw = yaw
+    # def setDesiredYaw(self, yaw):
+    #     self.desiredYaw = yaw
 
     def update(self, trans, yaw):
         x,y,z = trans

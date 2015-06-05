@@ -129,10 +129,17 @@ def turnOffMotors():
     # control.yaw_tare = 0
 
 def update_controller(controller):
+    global count
+    timeout = 25
     if position_known:
+        count = 0
+    else:
+        count = count + 1
+    if count < timeout:
+        print "count: ", str(count)
         # print "position known"
         try:
-            (trans,rot) = listener.lookupTransform('/desired_position', '/camera', rospy.Time(0))
+            (trans,rot) = listener.lookupTransform('/desired_position_controller', '/camera', rospy.Time(0))
             (trans2,temp) = listener.lookupTransform('/marker_origin', '/camera', rospy.Time(0))
 
             # calculate angle from the ROV to the dock
@@ -173,10 +180,6 @@ def update_controller(controller):
 
 
 def mainDrive():
-    #if (gui.clickedNavButton):
-    #    turnOffMotors()
-    #    gui.resetNavButton()
-
     if (gui.navigateStatus()):
         update_controller(controller)
     else:
@@ -208,6 +211,7 @@ if __name__=="__main__":
     rospy.init_node('autodrive')
 
     rospy.Subscriber("position_known", Bool, positionStatusCallback)
+    global count
 
     # Start gui and call mainDrive loop
     gui = OrcusGUI()

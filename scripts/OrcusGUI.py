@@ -32,7 +32,6 @@ class OrcusGUI(tk.Frame):
 		# Initialize ESTOP
 		self.ESTOP = False # starts with system running?  True means stop
 		self.NAVIGATE  = False
-		self.CLICKEDNAVBUTTON = False
 		# Initialize sensor values
 		self.ROVconnect = "disconnected"
 		self.controllerConnect = "disconnected"
@@ -176,18 +175,11 @@ class OrcusGUI(tk.Frame):
 		self.estop = tk.Button(self, text='ESTOP', command=self.estopCallback, background='red', width=7, padx=20, pady=20)
 		self.estop.grid(row=3, column=1)
 
-	def clickedNavButton(self):
-		return self.CLICKEDNAVBUTTON
-
-	def resetNavButton(self):
-		CLICKEDNAVBUTTON = False
-
 	def navigateStatus(self):
 		return self.NAVIGATE
 
 	def navigateCallback(self):
 		self.NAVIGATE = not self.NAVIGATE
-		self.CLICKEDNAVBUTTON = True
 		if (self.NAVIGATE):
 			self.navigate.configure(background='yellow', text='Stop Navigating')
 		else:
